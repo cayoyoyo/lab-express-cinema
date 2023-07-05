@@ -15,16 +15,55 @@ const hbs = require('hbs');
 
 const app = express();
 
+const mongoose = require('mongoose');
+const MONGO_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/movies";
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+
+const Movie = require("./models/Movie.model");
+
+
 // ℹ️ This function is getting exported from the config folder. It runs most middlewares
 require('./config')(app);
 
 // default value for title local
-const projectName = 'lab-express-cinema';
+const projectName = 'Cinema Ironhack';
 const capitalized = string => string[0].toUpperCase() + string.slice(1).toLowerCase();
 
-app.locals.title = `${capitalized(projectName)}- Generated with Ironlauncher`;
+app.locals.title = `${projectName}`;
 
 // 👇 Start handling routes here
+app.get('/', (req, res) => {
+    res.render('index');
+});
+
+
+
+app.get('/movies', (req, res, next) => {
+ Movie.find()
+ .then((result) => {
+  res.render("movies", { movies : result });
+ })
+ .catch(()=> console.log("Error"));
+
+
+});
+ 
+ 
+app.get('/movies/:id', (req, res, next) => {
+  const movieId = req.params.id;
+  Movie.findById(movieId)
+    .then((movie) => {
+      res.render('movie', { movie: movie });
+    })
+    .catch((error) => {
+      console.error('Error fetching movie:', error);
+      res.redirect('/movies');
+    });
+});
+
+
+
+
 const index = require('./routes/index');
 app.use('/', index);
 
